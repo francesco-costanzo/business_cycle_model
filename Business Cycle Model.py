@@ -19,6 +19,7 @@ from reportlab.lib.pagesizes import letter, landscape
 
 location = '/Users/User/Desktop/Business Cycle'
 dateToday = date.today()
+print('Thinking...')
 
 def rolling_zscore(economic_data):
     avg = economic_data.rolling(window=120).mean()
@@ -301,17 +302,19 @@ sector_names = ['CD', 'CS', 'EN', 'FN', 'HC', 'ID', 'IT', 'MA', 'UT']
 
 sector_rets = get_sector_etf_rets(tickers, sector_names, '1998-12-16')
 phase_rets = []
+
 for phase in phases.columns:
-    rets = sector_rets * ([phases[phase]] * 9)
+    rets = get_sector_etf_rets(tickers, sector_names, '1998-12-16')
+    for sector in sector_rets.columns:
+        rets[sector] = sector_rets[sector] * phases[phase]
     rets = rets.dropna()
     ann_ret = np.prod(1 + rets) ** (1/(len(rets)/12)) - 1
     ann_stdev = np.std(rets) * np.sqrt(12)
     phase_ir = ann_ret / ann_stdev
     phase_ir = pd.DataFrame({phase:phase_ir})
     phase_rets.append(phase_ir)
+    print('Still thinking...')
 phase_rets = phase_rets[0].join(phase_rets[1:])
-
-
 
 def ir_charts(phases_bc, top_bottom):
     fig = plt.figure(figsize=[11,9])
@@ -375,7 +378,7 @@ periods 02/1994 - 02/2020. All other returns sourced from Yahoo Finance
 ETFs'''
 
 bb_factor_rets = pd.read_csv(
-    'https://raw.githubusercontent.com/BryceCameron01/Factor_Data/master/Factor_Returns.csv',
+    'https://raw.githubusercontent.com/francesco-costanzo/business_cycle_model/main/Factor_Returns.csv?token=GHSAT0AAAAAABYQTOA42XCNER2UH5TXCGOMYYZFALA',
     index_col=0)
 bb_end = str(bb_factor_rets.index[-1])
 def get_factor_returns(tickers):
@@ -478,14 +481,14 @@ cum_f_rets = np.cumprod(1 + f_rets_tr) - 1
 # =============================================================================
 #                     Output 
 # =============================================================================
-pdf = canvas.Canvas(f'Business Cycle Monthly Report - {date.today().month}{date.today().year}.pdf')
+pdf = canvas.Canvas(f'/Users/User/Desktop/Business Cycle/Business Cycle Monthly Report - {(date.today()- relativedelta(months=1)).strftime("%b")} {(date.today()- relativedelta(months=1)).year}.pdf')
 pdf.setTitle('Business Cycle Monthly Report')
 
 pdf.setFillColorRGB(0.1,0.05,0.55)
 pdf.rect(-10, 770, 700, 150, fill=1)
 
 pdf.setFillColor(white)
-pdf.setFont('Times-Roman', 48)
+pdf.setFont('Helvetica', 48)
 pdf.drawCentredString(300, 790, 'US Business Cycle Report')
 
 pdf.setFillColor(grey, alpha=0.7)
@@ -493,7 +496,7 @@ pdf.setLineWidth(0)
 pdf.rect(-10, 735, 620, 35, fill=1)
 
 pdf.setFillColor(black)
-pdf.setFont('Times-Roman', 24)
+pdf.setFont('Helvetica', 24)
 lastmonth = (date.today() - relativedelta(months=1)).strftime('%B %Y')
 pdf.drawString(50, 740, 'For the Month of ' + lastmonth)
 
@@ -525,14 +528,14 @@ plt.savefig(f'{location}/Pic.png')
 pdf.drawImage(f'{location}/Pic.png', 0, 450, 600, 285)
 pdf.setFont('Helvetica', 14)
 pdf.drawString(75, 710, 'US Equity Indices Trailing 12 Month Cumulative Returns')
-pdf.setFont('Times-Italic', 9)
+pdf.setFont('Helvetica', 9)
 pdf.drawString(75, 460, 'Source: Yahoo Finance, as of ' + end_date.strftime('%Y-%m-%d'))
 
-pdf.setFont('Times-Roman', 24)
+pdf.setFont('Helvetica', 24)
 pdf.drawString(50, 425, 'Monthly Summary')
 pdf.line(47, 417, 550, 417)
 
-pdf.setFont('Times-Roman', 18)
+pdf.setFont('Helvetica', 18)
 pdf.drawString(100,390, 'Business Cycle Phase')
 pdf.drawString(350,390, 'Target Asset Allocation')
 
@@ -562,15 +565,15 @@ if current_phase == 1:
     pdf.drawString(98, 77, 'Late Contraction')
     pdf.setFillColor(white)
     pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(340, 345, 'Target Sectors: HC, IT, UT')
+    pdf.drawString(340, 345, f'Target Sectors: {", ".join(longs[0])}')
     pdf.drawString(341, 325, 'Target Factor: Momentum')
     pdf.setFillColor(black)
     pdf.setFont('Helvetica', 16)
-    pdf.drawString(341, 260, 'Target Sectors: FN, UT, CS')
+    pdf.drawString(341, 260, f'Target Sectors: {", ".join(longs[1])}')
     pdf.drawString(340, 240, 'Target Factor: Low Volatility')
-    pdf.drawString(338, 175, 'Target Sectors: CS, HC, MA')
+    pdf.drawString(338, 175, f'Target Sectors: {", ".join(longs[2])}')
     pdf.drawString(345, 155, 'Target Factor: Safe Haven')
-    pdf.drawString(343, 90, 'Target Sectors: CD, HC, ID')
+    pdf.drawString(343, 90, f'Target Sectors: {", ".join(longs[3])}')
     pdf.drawString(362, 70, 'Target Factor: Growth')
 elif current_phase == 2:
     pdf.setLineWidth(1)
@@ -598,17 +601,17 @@ elif current_phase == 2:
     pdf.drawString(95, 162, 'Early Contraction')
     pdf.drawString(98, 77, 'Late Contraction')
     pdf.setFont('Helvetica', 16)
-    pdf.drawString(342, 345, 'Target Sectors: HC, IT, UT')
+    pdf.drawString(342, 345, f'Target Sectors: {", ".join(longs[0])}')
     pdf.drawString(344, 325, 'Target Factor: Momentum')
     pdf.setFillColor(white)
     pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(337, 260, 'Target Sectors: FN, UT, CS')
+    pdf.drawString(337, 260, f'Target Sectors: {", ".join(longs[1])}')
     pdf.drawString(331, 240, 'Target Factor: Low Volatility')
     pdf.setFillColor(black)
     pdf.setFont('Helvetica', 16)
-    pdf.drawString(338, 175, 'Target Sectors: CS, HC, MA')
+    pdf.drawString(338, 175, f'Target Sectors: {", ".join(longs[2])}')
     pdf.drawString(345, 155, 'Target Factor: Safe Haven')
-    pdf.drawString(343, 90, 'Target Sectors: CD, HC, ID')
+    pdf.drawString(343, 90, f'Target Sectors: {", ".join(longs[3])}')
     pdf.drawString(362, 70, 'Target Factor: Growth')
 elif current_phase == 3:
     pdf.setLineWidth(1)
@@ -636,17 +639,17 @@ elif current_phase == 3:
     pdf.setFont('Helvetica', 22)
     pdf.drawString(98, 77, 'Late Contraction')
     pdf.setFont('Helvetica', 16)
-    pdf.drawString(342, 345, 'Target Sectors: HC, IT, UT')
+    pdf.drawString(342, 345, f'Target Sectors: {", ".join(longs[0])}')
     pdf.drawString(344, 325, 'Target Factor: Momentum')
-    pdf.drawString(341, 260, 'Target Sectors: FN, UT, CS')
+    pdf.drawString(341, 260, f'Target Sectors: {", ".join(longs[1])}')
     pdf.drawString(340, 240, 'Target Factor: Low Volatility')
     pdf.setFillColor(white)
     pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(334, 175, 'Target Sectors: CS, HC, MA')
+    pdf.drawString(334, 175, f'Target Sectors: {", ".join(longs[2])}')
     pdf.drawString(338, 155, 'Target Factor: Safe Haven')
     pdf.setFillColor(black)
     pdf.setFont('Helvetica', 16)
-    pdf.drawString(343, 90, 'Target Sectors: CD, HC, ID')
+    pdf.drawString(343, 90, f'Target Sectors: {", ".join(longs[3])}')
     pdf.drawString(362, 70, 'Target Factor: Growth')
 elif current_phase == 4:
     pdf.setFillColor(grey, alpha=0.5)
@@ -671,15 +674,15 @@ elif current_phase == 4:
     pdf.drawString(88, 77, 'Late Contraction')
     pdf.setFillColor(black)
     pdf.setFont('Helvetica', 16)
-    pdf.drawString(342, 345, 'Target Sectors: HC, IT, UT')
+    pdf.drawString(342, 345, f'Target Sectors: {", ".join(longs[0])}')
     pdf.drawString(344, 325, 'Target Factor: Momentum')
-    pdf.drawString(341, 260, 'Target Sectors: FN, UT, CS')
+    pdf.drawString(341, 260, f'Target Sectors: {", ".join(longs[1])}')
     pdf.drawString(340, 240, 'Target Factor: Low Volatility')
-    pdf.drawString(338, 175, 'Target Sectors: CS, HC, MA')
+    pdf.drawString(338, 175, f'Target Sectors: {", ".join(longs[2])}')
     pdf.drawString(345, 155, 'Target Factor: Safe Haven')
     pdf.setFillColor(white)
     pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(336, 90, 'Target Sectors: CD, HC, ID')
+    pdf.drawString(336, 90, f'Target Sectors: {", ".join(longs[3])}')
     pdf.drawString(355, 70, 'Target Factor: Growth')
 else:
     pass
@@ -731,7 +734,7 @@ pdf.setLineWidth(0)
 pdf.setFillColorRGB(0.1,0.05,0.55)
 pdf.rect(-10, 780, 700, 5, fill=1)
 pdf.setFillColor(black)
-pdf.setFont('Times-Roman', 36)
+pdf.setFont('Helvetica', 36)
 pdf.drawCentredString(300, 800, 'Composite Business Cycle Indicator')
 pdf.setFont('Helvetica', size=18)
 pdf.drawString(50,740, 'Composite Business Cycle Indicator')
@@ -741,7 +744,7 @@ pdf.line(45, 417, 550, 417)
 pdf.setFont('Helvetica', 10)
 pdf.drawString(47, 479, 'Note: Shaded areas represent US recessions as indicated by NBER.')
 pdf.drawString(47, 466, 'Reading greater than 100 indicates expansion, less than 100 indicates contraction.')
-pdf.setFont('Times-Roman', size=32)
+pdf.setFont('Helvetica', size=32)
 pdf.setFillColor(black)
 pdf.drawString(120, 360, '1')
 pdf.drawString(500, 360, '2')
@@ -765,7 +768,7 @@ pdf.setLineWidth(0)
 pdf.setFillColorRGB(0.1,0.05,0.55)
 pdf.rect(-10, 780, 700, 5, fill=1)
 pdf.setFillColor(black)
-pdf.setFont('Times-Roman', 36)
+pdf.setFont('Helvetica', 36)
 pdf.drawCentredString(300, 800, 'US Sector Rotation Strategy')
 pdf.setFont('Helvetica', size=18)
 pdf.drawString(40,750,'US Sectors Information Ratios by Phase of Business Cycle')
@@ -811,7 +814,7 @@ elif tr_1 == False:
     x_label = x_axis.get_label()
     x_label.set_visible(False)
     plt.savefig(f'{location}/SectorIRs.png')
-    pdf.drawImage(f'{Location}/SectorIRs.png', -10 , 3, 590, 290)
+    pdf.drawImage(f'{location}/SectorIRs.png', -10 , 3, 590, 290)
     pdf.setFontSize(10)
     pdf.drawString(45, 309, 'Note: Green bars denote sectors with long position, red short, and grey neutral.')
     pdf.drawString(45, 296, 'Sector returns based on SPDR Sector ETF returns from 1999-01-31 to ' + eolastmonth.strftime('%Y-%m-%d'))
@@ -887,7 +890,7 @@ comp_lead_indicators = comp_lead_indicators[['Composite Leading Indicator',
                          'Manufacturing Hours Worked',
                          'Initial Unemployment Claims']]
 
-pdf.setFont('Times-Roman', 12)
+pdf.setFont('Helvetica', 12)
 pdf.setLineWidth(1)
 
 def plot_indicator_charts(indicators, figsize, pic_num):
@@ -931,12 +934,12 @@ def plot_indicator_charts(indicators, figsize, pic_num):
 
 
 plot_indicator_charts(comp_lead_indicators[200:], [8.5,12], 2)
-pdf.drawImage(f'{location}Pic2.png', -10, 10, 600, 850)
+pdf.drawImage(f'{location}/Pic2.png', -10, 10, 600, 850)
 pdf.setLineWidth(0)
 pdf.setFillColorRGB(0.1,0.05,0.55)
 pdf.rect(-10, 780, 700, 5, fill=1)
 pdf.setFillColor(black)
-pdf.setFont('Times-Roman', 36)
+pdf.setFont('Helvetica', 36)
 pdf.drawCentredString(300, 800, 'Composite Leading Indicators')
 pdf.setFont('Helvetica', 10)
 pdf.drawString(47, 65, 'Note: Shaded areas represent US recessions as indicated by NBER.')
@@ -973,7 +976,7 @@ pdf.setLineWidth(0)
 pdf.setFillColorRGB(0.1,0.05,0.55)
 pdf.rect(-10, 780, 700, 5, fill=1)
 pdf.setFillColor(black)
-pdf.setFont('Times-Roman', 36)
+pdf.setFont('Helvetica', 36)
 pdf.drawCentredString(300, 800, 'Composite Coincident Indicators')
 pdf.setFont('Helvetica', 10)
 pdf.drawString(47, 65, 'Note: Shaded areas represent US recessions as indicated by NBER.')
@@ -1003,10 +1006,11 @@ pdf.setLineWidth(0)
 pdf.setFillColorRGB(0.1,0.05,0.55)
 pdf.rect(-10, 780, 700, 5, fill=1)
 pdf.setFillColor(black)
-pdf.setFont('Times-Roman', 36)
+pdf.setFont('Helvetica', 36)
 pdf.drawCentredString(300, 800, 'Composite Lagging Indicators')
 pdf.setFont('Helvetica', 10)
 pdf.drawString(47, 65, 'Note: Shaded areas represent US recessions as indicated by NBER.')
 pdf.drawString(47, 52, 'Reading greater than 100 indicates expansion, less than 100 indicates contraction.')
 
 pdf.save()
+print('Done')
