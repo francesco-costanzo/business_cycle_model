@@ -378,7 +378,7 @@ periods 02/1994 - 02/2020. All other returns sourced from Yahoo Finance
 ETFs'''
 
 bb_factor_rets = pd.read_csv(
-    'https://raw.githubusercontent.com/francesco-costanzo/business_cycle_model/main/Factor_Returns.csv?token=GHSAT0AAAAAABYQTOA42XCNER2UH5TXCGOMYYZFALA',
+    '/Users/User/Desktop/Business Cycle/Factor_Returns.csv',
     index_col=0)
 bb_end = str(bb_factor_rets.index[-1])
 def get_factor_returns(tickers):
