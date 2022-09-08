@@ -515,7 +515,7 @@ index_rets = index_rets * 100
 plt.rcParams["font.family"] = "sans-serif"
 fig, ax = plt.subplots(figsize=[8.5,4])
 ax = index_rets['S&P 500'].plot(color='blue', label='S&P 500')
-index_rets['NASDAQ Composite'].plot(color='grey', label='NASDAQ Composite', linestyle='dotted')
+index_rets['NASDAQ Composite'].plot(color='dimgray', label='NASDAQ Composite', linestyle='dotted')
 index_rets['Russell 2000'].plot(color='black', label='Russell 2000', linestyle='--')
 ax.get_yaxis().set_major_formatter(ticker.PercentFormatter())
 ax.axhline(y=0, color='black', linewidth=1)
@@ -779,8 +779,8 @@ tr_1 = True
 
 if tr_1 == True:
     fig, ax = plt.subplots(figsize=[8.5,4])
-    ax = (cum_long_ret_tr * 100).plot(color='green', label='Long', linestyle='--')
-    (cum_short_ret_tr * 100).plot(color='red', label='Short', linestyle='--')
+    ax = (cum_long_ret_tr * 100).plot(color='green', label='Long')
+    (cum_short_ret_tr * 100).plot(color='red', label='Short')
     (cum_long_short_tr * 100).plot(color='blue', label='Long-Short')
     (cum_spy_tr * 100).plot(color='black', label='SPY')
     ax.legend(edgecolor='black')
@@ -865,7 +865,6 @@ ax.get_yaxis().set_major_formatter(ticker.PercentFormatter())
 x_axis = ax.axes.get_xaxis()
 x_label = x_axis.get_label()
 x_label.set_visible(False)
-# ax.get_xaxis().set_major_formatter(mdates.DateFormatter('%Y'))
 plt.savefig(f'{location}/FactorReturns.png')
 pdf.drawImage(f'{location}/FactorReturns.png', -10, 40, 620, 300)
 pdf.drawString(50, 315, 'Factor Strategy Cumulative Returns, Risk Level 1%')
