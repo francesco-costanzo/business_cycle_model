@@ -22,8 +22,8 @@ dateToday = date.today()
 print('Thinking...')
 
 def rolling_zscore(economic_data):
-    avg = economic_data.rolling(window=120).mean()
-    std = economic_data.rolling(window=120).std()
+    avg = economic_data.rolling(window=180).mean()
+    std = economic_data.rolling(window=180).std()
     zscore = (economic_data - avg) / std
     function_res = sp.norm.cdf(zscore, 0)
     function_res = pd.DataFrame(function_res)
@@ -47,11 +47,11 @@ def fix_dates(series, missing_months):
     dates = series.index
     delta_d = timedelta(days=1)
     eomonth = dates - delta_d
-    eolastmonth = date.today() - relativedelta(months=1)
+    eolastmonth = dateToday - relativedelta(months=1)
     eolastmonth = end_of_month(eolastmonth)
-    eo2month = date.today() - relativedelta(months=2)
+    eo2month = dateToday - relativedelta(months=2)
     eo2month = end_of_month(eo2month)
-    eo3month = date.today() - relativedelta(months=3)
+    eo3month = dateToday - relativedelta(months=3)
     eo3month = end_of_month(eo3month)   
     if missing_months == 1:
         eomonth = list(eomonth)
@@ -78,9 +78,9 @@ quandl.ApiConfig.api_key = 'YFu19-LxqbmfKpsKkVAy'
 #                          Composite Leading Indicator
 # =============================================================================
 
-eolastmonth = date.today() - relativedelta(months=1)
+eolastmonth = dateToday - relativedelta(months=1)
 eolastmonth = end_of_month(eolastmonth)
-eo2month = date.today() - relativedelta(months=2)
+eo2month = dateToday - relativedelta(months=2)
 eo2month = end_of_month(eo2month)
 end_date = eolastmonth
 
@@ -289,7 +289,7 @@ phases = pd.DataFrame({'Early_Expansion':ee, 'Late_Expansion':le,
 def get_sector_etf_rets(tickers, sector_names, start):
     data = []
     for etf, name in zip(tickers, sector_names):
-        price = pdr.get_data_yahoo(etf, start=start, end=str(date.today()))['Adj Close']
+        price = pdr.get_data_yahoo(etf, start=start, end=str(dateToday))['Adj Close']
         price = price.resample('M').last()
         rets = price.pct_change().dropna()
         rets = pd.DataFrame({name:rets})
@@ -332,7 +332,7 @@ def ir_charts(phases_bc, top_bottom):
 
 charts = ir_charts(phase_rets.columns, 3)
 plt.savefig(f'{location}/IR_Charts.png')        
-spy = pdr.get_data_yahoo('SPY', start='1998-12-16', end=str(date.today()))['Adj Close']
+spy = pdr.get_data_yahoo('SPY', start='1998-12-16', end=str(dateToday))['Adj Close']
 spy = spy.resample('M').last()
 spy = spy.pct_change().dropna()
 spy_tr = spy / (np.std(spy) * np.sqrt(12) * 100)
@@ -481,7 +481,7 @@ cum_f_rets = np.cumprod(1 + f_rets_tr) - 1
 # =============================================================================
 #                     Output 
 # =============================================================================
-pdf = canvas.Canvas(f'/Users/User/Desktop/Business Cycle/Business Cycle Monthly Report - {(date.today()- relativedelta(months=1)).strftime("%b")} {(date.today()- relativedelta(months=1)).year}.pdf')
+pdf = canvas.Canvas(f'/Users/User/Desktop/Business Cycle/Business Cycle Monthly Report - {(dateToday - relativedelta(months=1)).strftime("%b")} {(dateToday- relativedelta(months=1)).year}.pdf')
 pdf.setTitle('Business Cycle Monthly Report')
 
 pdf.setFillColorRGB(0.1,0.05,0.55)
@@ -497,11 +497,11 @@ pdf.rect(-10, 735, 620, 35, fill=1)
 
 pdf.setFillColor(black)
 pdf.setFont('Helvetica', 24)
-lastmonth = (date.today() - relativedelta(months=1)).strftime('%B %Y')
+lastmonth = (dateToday - relativedelta(months=1)).strftime('%B %Y')
 pdf.drawString(50, 740, 'For the Month of ' + lastmonth)
 
 def get_index_rets(tickers, names):
-    index_rets = [pd.DataFrame({name:pdr.get_data_yahoo(ticker, start=str(date.today() - relativedelta(years=1)),
+    index_rets = [pd.DataFrame({name:pdr.get_data_yahoo(ticker, start=str(dateToday - relativedelta(years=1)),
                                       end=str(end_date))['Adj Close']}) for name, ticker in zip(names, tickers)]
     index_rets = index_rets[0].join(index_rets[1:])
     index_rets = index_rets.pct_change().dropna()
@@ -725,8 +725,8 @@ ax.axvspan(0, 15, 0.5, 1, color='green', alpha=0.7)
 ax.axvspan(-15, 0, 0.5, 1, color='green', alpha=0.4)
 ax.axvspan(-15, 0, 0, 0.5, color='red', alpha=0.6)
 ax.axvspan(0, 15, 0, 0.5, color='gold', alpha=0.6)
-plt.annotate('{:%b-%y}'.format(bc.index[0]), xy=(bc.Momo[1] * 100 + 2, bc.BC[1]-5))
-plt.annotate('{:%b-%y}'.format(bc.index[-1]), xy=(bc.Momo[-1]*100 + 3, bc.BC[-1]-5))
+plt.annotate('{:%b-%y}'.format(pd.to_datetime(bc.index[0])), xy=(bc.Momo[1] * 100 + 2, bc.BC[1]-5))
+plt.annotate('{:%b-%y}'.format(pd.to_datetime(bc.index[-1])), xy=(bc.Momo[-1]*100 + 3, bc.BC[-1]-5))
 plt.savefig(f'{location}/BC_Map.png')
 pdf.drawImage(f'{location}/BC_Map.png', 40, 80, 550, 350)
 
