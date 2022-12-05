@@ -12,7 +12,6 @@ import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
 import quandl
 import scipy.stats as sp
-import seaborn as sns
 
 from matplotlib.dates import date2num
 from reportlab.lib.pagesizes import letter, landscape
@@ -290,7 +289,7 @@ def get_sector_etf_rets(tickers, sector_names, start):
     data = []
     for etf, name in zip(tickers, sector_names):
         price = pdr.get_data_yahoo(etf, start=start, end=str(dateToday))['Adj Close']
-        price = price.resample('M').last()
+        price = price.resample('M').last().shift(periods=-1).dropna()
         rets = price.pct_change().dropna()
         rets = pd.DataFrame({name:rets})
         data.append(rets)
@@ -369,6 +368,13 @@ cum_long_ret_tr = np.cumprod(1 + long_rets_tr) - 1
 cum_short_ret_tr = np.cumprod(1 + short_rets_tr) - 1
 cum_long_short_tr = np.cumprod(1 + long_short_tr) - 1
 cum_spy_tr = np.cumprod(1 + spy_tr) - 1
+
+plt.clf()
+plt.plot(cum_long_ret_tr, color='red', label='long')
+plt.plot(cum_long_ret_tr-cum_spy_tr, color='blue', label='excess return')
+plt.plot(cum_spy_tr, color='black', label='SPY')
+plt.legend()
+#plt.show()
 
 # =============================================================================
 #                        Factor Rotation Strategy
@@ -455,16 +461,16 @@ def annotate_heatmap(im, data=None, valfmt='{x:.2f}',
 
 texts = annotate_heatmap(im, valfmt='{x:.3f}', threshold=0.25)
 ax.add_patch(Rectangle((0.5,-0.5), 1, 1, fill=False, edgecolor='gold', lw=4))
-ax.add_patch(Rectangle((1.5,2.5), 1, 1, fill=False, edgecolor='gold', lw=4))
+ax.add_patch(Rectangle((-0.5,2.5), 1, 1, fill=False, edgecolor='gold', lw=4))
 ax.add_patch(Rectangle((2.5,0.5), 1, 1, fill=False, edgecolor='gold', lw=4))
 ax.add_patch(Rectangle((3.5,1.5), 1, 1, fill=False, edgecolor='gold', lw=4))
 plt.savefig(f'{location}/Heat_Map.png', dpi=300, bbox_inches='tight')
 
 factor_signal = bc_signal[len(bc_signal)-len(f_rets_comb)-1:].shift(1).dropna()
 f_strat_rets = []
-for phase, mo, lv, sh, gr in zip(factor_signal, f_rets_comb['M2US000$ Index'],
+for phase, mo, lv, sh, vl in zip(factor_signal, f_rets_comb['M2US000$ Index'],
                                  f_rets_comb['SP5LVIT Index'], f_rets_comb['LT01TRUU Index'],
-                                 f_rets_comb['SPTRSGX Index']):
+                                 f_rets_comb['M1US000V Index']):
     if phase == 1:
         f_strat_rets.append(mo)
     elif phase == 2:
@@ -472,7 +478,8 @@ for phase, mo, lv, sh, gr in zip(factor_signal, f_rets_comb['M2US000$ Index'],
     elif phase == 3:
         f_strat_rets.append(sh)
     elif phase == 4:
-        f_strat_rets.append(gr)
+        f_strat_rets.append(vl)
+
 
 f_strat_rets = pd.Series(f_strat_rets, index=f_rets_comb.index)
 f_rets_tr = f_strat_rets / (np.std(f_strat_rets) * np.sqrt(12) * 100)
@@ -481,7 +488,7 @@ cum_f_rets = np.cumprod(1 + f_rets_tr) - 1
 # =============================================================================
 #                     Output 
 # =============================================================================
-pdf = canvas.Canvas(f'/Users/User/Desktop/Business Cycle/Business Cycle Monthly Report - {(dateToday - relativedelta(months=1)).strftime("%b")} {(dateToday- relativedelta(months=1)).year}.pdf')
+pdf = canvas.Canvas(f'/Users/User/Desktop/Business Cycle/Business Cycle Monthly Report {(dateToday - relativedelta(months=1)).strftime("%m")}-{(dateToday- relativedelta(months=1)).year}.pdf')
 pdf.setTitle('Business Cycle Monthly Report')
 
 pdf.setFillColorRGB(0.1,0.05,0.55)
